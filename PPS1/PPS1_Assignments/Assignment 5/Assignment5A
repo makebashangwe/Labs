@@ -1,0 +1,236 @@
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the window
+resolution = (800, 800)  # Window size
+screen = pygame.display.set_mode((resolution))
+pygame.display.set_caption("SPACE INVADERS")  # Title of the game
+screen.fill((0, 0, 0))  # Fill the screen with black
+
+clock = pygame.time.Clock()  # For controlling the frame rate
+
+#music 
+pygame.mixer.music.load('music.mp3')
+pygame.mixer.music.set_volume(0.6)
+pygame.mixer.music.play(-1)
+
+hit_sound = pygame.mixer.Sound('damage.mp3')
+hit_sound.set_volume(0.7)
+meteor_sound = pygame.mixer.Sound('bling.mp3')
+meteor_sound.set_volume(0.5)
+
+# Colors
+def random_color():
+    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+RED = (255, 0, 0)   # Red for the meteor
+GREEN = (0, 255, 0) # Green (not used yet)
+BLUE = (0, 0, 255)  # Blue (not used yet)
+WHITE = (255, 255, 255) # White for the ship
+BLACK = (0, 0, 0)   # Black for background
+
+# Ship setup
+ship = pygame.Surface((40, 40))  # Create the ship surface
+ship.fill(WHITE)  # Fill it with white
+ship_rect = pygame.Rect(360, 760, 40, 40)  # Position of the ship
+
+# Meteor setup
+meteor_width = random.randint(20, 60)  # Random width for the meteor
+meteor_height = random.randint(20, 60)  # Random height for the meteor
+meteor = pygame.Surface((meteor_width, meteor_height))  # Create meteor surface
+meteor.fill(random_color())
+meteor_rect = pygame.Rect(random.randint(0, 800 - meteor_width), 0, meteor_width, meteor_height)  # Start position of meteor
+
+# Game variables
+lives = max(3,0)  # Player lives
+falling = True  # Is the meteor falling?
+fall_duration = 500  # Duration to fall before resetting
+has_lost_life = False
+movement_speed = 5  # Speed for the ship movement
+
+# Blinking variables
+blink_start_time = 0  # Time when blinking starts
+blink_duration = 500  # How long the ship will blink
+is_blinking = False  # Is the ship blinking?
+
+def handle_blinking():
+    # Handle the ship's blinking effect
+    global is_blinking, blink_start_time, ship
+    current_time = pygame.time.get_ticks()  # Get the current time
+    blink_elapsed = current_time - blink_start_time  # Calculate how long it has been blinking
+
+    if (blink_elapsed // 60) % 2 == 0:  # If the blink interval
+        ship.fill(RED)  # Fill ship with red to indicate hit
+    else:
+        ship.fill(WHITE)  # Reset to white
+
+    if blink_elapsed >= blink_duration:  # If blink duration is over
+        is_blinking = False  # Stop blinking
+        ship.fill(WHITE)  # Reset to white
+
+def create_meteor():
+    # Create a new meteor once the old one goes off-screen
+    global falling, meteor, meteor_rect
+    print("Creating a meteor....")
+    meteor_rect.x = random.randint(0, resolution[0] - meteor_rect.width)
+    meteor_rect.y = random.randint(-100, -40)
+    meteor_width = random.randint(20, 60)  # Generate new width
+    meteor_height = random.randint(20, 60)  # Generate new height
+    meteor = pygame.Surface((meteor_width, meteor_height))  # Create new meteor surface
+    meteor.fill(random_color())  # Fill it with random colod
+    meteor_rect = pygame.Rect(random.randint(0, resolution[0] - meteor_width), 0, meteor_width, meteor_height)  # Position it at the top
+    falling = True  # Make sure it's falling
+    meteor_sound.play()
+        
+    if meteor_rect.y > resolution[1]:  # If the meteor goes off the bottom
+        meteor_width = random.randint(20, 60)  # Generate new width
+        meteor_height = random.randint(20, 60)  # Generate new height
+        meteor = pygame.Surface((meteor_width, meteor_height))  # Create new meteor surface
+        meteor.fill(random_color())         
+        meteor_rect = pygame.Rect(random.randint(0, resolution[0] - meteor_width), 0, meteor_width, meteor_height)  # Position it at the top
+        falling = True  # Make sure it's falling
+        
+
+def game_over():
+    global running 
+    # Display game over message
+    font = pygame.font.Font(None, 100)  # Load font
+    text_surface = font.render(f"YOU DIED", True, WHITE)  # Create the text surface
+    screen.blit(text_surface, (250, 300))  # Draw it on the screen
+
+    esc_font = pygame.font.Font(None, 16)
+    esc_surface = esc_font.render(f"press esc to exit", True, WHITE)  # Create the text surface
+    screen.blit(esc_surface, (250, 500)) 
+
+    for event in pygame.event.get():  # Loop through events
+        if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:  # If the window is closed or escape is pressed
+            running = False
+            pygame.quit()  # Quit Pygame
+            sys.exit()  # Exit the program
+    running = False
+    
+
+running = True  # Game loop flag
+
+# Main game loop
+while running:
+    # Event handling
+    for event in pygame.event.get():  # Loop through events
+        if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:  # If the window is closed or escape is pressed
+            pygame.quit()  # Quit Pygame
+            sys.exit()  # Exit the program
+
+    elapsed_time = pygame.time.get_ticks()  # Get time elapsed since the game started
+    if pygame.time.get_ticks() % 500 == 0:  # Adjust time interval as needed
+        create_meteor()
+        meteor_sound.play()
+
+    # Adjust falling speed based on elapsed time
+    if elapsed_time < 100**2:
+        v_fall_speed = random.randint(3, 10)  # Speed for early game
+        h_fall_speed = random.randint(3, 10)  # Horizontal speed for early game
+    if elapsed_time > 100**2:
+        v_fall_speed = random.randint(5, 15)  # Speed for mid game
+        h_fall_speed = random.randint(5, 15)
+    if elapsed_time > 100**4:
+        v_fall_speed = random.randint(10, 20)  # Speed for later game
+        h_fall_speed = random.randint(5, 15)
+    if elapsed_time > 100**6:
+        v_fall_speed = random.randint(20, 50)  # Speed for end game
+        h_fall_speed = random.randint(5, 15)
+    else:
+        v_fall_speed = random.randint(5, 20)  # Default speed
+        h_fall_speed = random.randint(5, 15)
+
+   # Meteor falling logic
+    if falling:  # Only if the meteor is supposed to be falling
+    # Vertical falling
+        meteor_rect.y += v_fall_speed  # Move meteor down
+    if meteor_rect.y > resolution[1]:  # If meteor goes off the bottom
+        create_meteor()  # Create a new meteor at the top
+        meteor_sound.play()
+    # Horizontal movement logic
+    meteor_rect.x += h_fall_speed  # Move meteor horizontally
+    # Check if the meteor goes off the right side of the screen
+    if meteor_rect.x > resolution[0]:  # If it goes off the right
+        meteor_rect.x = -meteor_rect.width  # Reset it to the left side
+
+
+    # Handle blinking if hit
+    if is_blinking:
+        handle_blinking()
+
+    # Movement controls for the ship
+    keys = pygame.key.get_pressed()  # Get key states
+    if keys[pygame.K_a]:
+        ship_rect.x -= movement_speed  # Move left
+    if keys[pygame.K_d]:
+        ship_rect.x += movement_speed  # Move right
+    if keys[pygame.K_LEFT]:
+        ship_rect.x -= movement_speed  # Move left (alternative)
+    if keys[pygame.K_RIGHT]:
+        ship_rect.x += movement_speed  # Move right (alternative)
+    if keys[pygame.K_w]:
+        ship_rect.y -= movement_speed  # Move up
+    if keys[pygame.K_s]:
+        ship_rect.y += movement_speed  # Move down
+    if keys[pygame.K_UP]:
+        ship_rect.y -= movement_speed  # Move up (alternative)
+    if keys[pygame.K_DOWN]:
+        ship_rect.y += movement_speed  # Move down (alternative)
+
+    # Keep the ship inside the screen bounds
+    if ship_rect.right >= resolution[0]:  # Right edge
+        ship_rect.right = resolution[0]
+    if ship_rect.left <= 0:  # Left edge
+        ship_rect.left = 0
+    if ship_rect.bottom >= resolution[1]:  # Bottom edge
+        ship_rect.bottom = resolution[1]
+    if ship_rect.top <= 0:  # Top edge
+        ship_rect.top = 0
+
+    # Check for collisions
+    if ship_rect.colliderect(meteor_rect) and not has_lost_life:  # If the ship collides with the meteor
+        falling = False  # Stop the meteor from falling
+        lives -= 1  # Lose a life
+        hit_sound.play()
+        if lives == 0:  # If no lives left
+            game_over()  # Show game over screen
+        is_blinking = True  # Start blinking
+        blink_start_time = pygame.time.get_ticks()  # Reset blink timer
+        create_meteor()  # Create a new meteor
+        meteor_sound.play()
+    elif meteor_rect.y >= 800:  # If meteor reaches bottom
+        falling = False  # Stop the meteor from falling
+    if not ship_rect.colliderect(meteor_rect):
+        has_lost_life = False
+        
+    
+    # Blitting (drawing) everything on the screen
+    screen.fill(BLACK)  # Clear the screen
+    screen.blit(ship, ship_rect.topleft)  # Draw the ship
+    screen.blit(meteor, meteor_rect.topleft)  # Draw the meteor
+
+    # Draw the lives left
+    lives_font = pygame.font.Font(None, 25)  # Load font for lives
+    lives_surface = lives_font.render(f"Lives: {max(lives,0)}", True, WHITE)  # Create text surface
+    screen.blit(lives_surface, (10, 10))  # Draw lives on screen
+
+    # Timer to display elapsed time
+    timer_font = pygame.font.Font(None, 25)  # Load font for timer
+    seconds = float(elapsed_time * 0.001)  # Convert milliseconds to seconds
+    timer_surface = timer_font.render(f"Time: {seconds:.2f}", True, WHITE)  # Create text surface
+    screen.blit(timer_surface, (10, 40))  # Draw timer on screen
+
+    #Implement a scoreboard to display the player's longest survival time. 
+
+
+    # Check game over condition
+    if lives == 0:  # If no lives left
+        game_over()  # Show game over screen
+    pygame.display.flip()
+    clock.tick(60)

@@ -51,6 +51,7 @@ falling = True  # Is the meteor falling?
 fall_duration = 500  # Duration to fall before resetting
 has_lost_life = False
 movement_speed = 5  # Speed for the ship movement
+longest_time = []
 
 # Blinking variables
 blink_start_time = 0  # Time when blinking starts
@@ -108,16 +109,32 @@ def start():
 
 
 def game_over():
-    global running
-    # Display game over message
-    font = pygame.font.Font(None, 100)
-    text_surface = font.render(f"YOU DIED", True, WHITE)
+    global running, longest_time
+    longest_time.append(seconds)
+
+    title_font = pygame.font.Font(None, 100)
+    score_font = pygame.font.Font(None, 36)  # Increased font size for better visibility
+    esc_font = pygame.font.Font(None, 20)  # Slightly larger for better legibility
+
+    # Render "YOU DIED" message
+    text_surface = title_font.render("YOU DIED", True, WHITE)
     screen.blit(text_surface, (250, 300))
 
-    esc_font = pygame.font.Font(None, 16)
-    esc_surface = esc_font.render(f"Press R to restart, ESC to quit", True, WHITE)
+    # Only sort and display if longest_time has entries
+    if longest_time:
+        max_time = longest_time[-1]
+        score_surface = score_font.render(f"Longest Time: {max_time:.2f}", True, WHITE)  # Formatting to 2 decimal places
+        screen.blit(score_surface, (250, 400))
+
+    # Instructions for restarting or quitting
+    esc_surface = esc_font.render("Press R to restart, ESC to quit", True, WHITE)
     screen.blit(esc_surface, (250, 500))
-    return
+
+    # Refresh the display to show the game over screen
+    pygame.display.flip()  # Make sure to update the display
+
+    return  # Return to exit the function
+    
 
                 
 start()

@@ -95,34 +95,46 @@ def create_meteor():
         falling = True  # Make sure it's falling
         
 
+def start():
+    global running, lives, ship_rect, meteor_rect, falling, has_lost_life
+    screen.fill(BLACK)
+    lives = 3  # Reset lives
+    ship_rect.x, ship_rect.y = 360, 760  # Reset the ship's position
+    meteor_rect.y = -meteor_rect.height  # Reset meteor
+    falling = True  # Make the meteor fall again
+    has_lost_life = False
+    pygame.mixer.music.play(-1)  # Restart music if stopped
+    running = True
+
+
 def game_over():
-    global running 
+    global running
     # Display game over message
-    font = pygame.font.Font(None, 100)  # Load font
-    text_surface = font.render(f"YOU DIED", True, WHITE)  # Create the text surface
-    screen.blit(text_surface, (250, 300))  # Draw it on the screen
+    font = pygame.font.Font(None, 100)
+    text_surface = font.render(f"YOU DIED", True, WHITE)
+    screen.blit(text_surface, (250, 300))
 
     esc_font = pygame.font.Font(None, 16)
-    esc_surface = esc_font.render(f"press esc to exit", True, WHITE)  # Create the text surface
-    screen.blit(esc_surface, (250, 500)) 
+    esc_surface = esc_font.render(f"Press R to restart, ESC to quit", True, WHITE)
+    screen.blit(esc_surface, (250, 500))
+    return
 
-    for event in pygame.event.get():  # Loop through events
-        if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:  # If the window is closed or escape is pressed
-            running = False
-            pygame.quit()  # Quit Pygame
-            sys.exit()  # Exit the program
-    running = False
-    
-
-running = True  # Game loop flag
+                
+start()
+running = True
 
 # Main game loop
 while running:
+    keys = pygame.key.get_pressed()  # Get key states
     # Event handling
     for event in pygame.event.get():  # Loop through events
         if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:  # If the window is closed or escape is pressed
             pygame.quit()  # Quit Pygame
             sys.exit()  # Exit the program
+        if keys[pygame.K_r]:
+            start()
+            running = True
+
 
     elapsed_time = pygame.time.get_ticks()  # Get time elapsed since the game started
     if pygame.time.get_ticks() % 500 == 0:  # Adjust time interval as needed
@@ -165,7 +177,7 @@ while running:
         handle_blinking()
 
     # Movement controls for the ship
-    keys = pygame.key.get_pressed()  # Get key states
+    
     if keys[pygame.K_a]:
         ship_rect.x -= movement_speed  # Move left
     if keys[pygame.K_d]:
@@ -230,7 +242,9 @@ while running:
 
 
     # Check game over condition
-    if lives == 0:  # If no lives left
-        game_over()  # Show game over screen
+    if lives == 0:
+        pygame.mixer.music.stop()  # Stop music when game is over
+        game_over()
+
     pygame.display.flip()
     clock.tick(60)

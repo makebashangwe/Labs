@@ -12,6 +12,8 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
+
+
 on_button = pygame.image.load("media/on_button.png").convert_alpha()
 on_button = pygame.transform.scale(on_button,(100,100))
 on_button_rect = pygame.Rect(80,200,100,100)

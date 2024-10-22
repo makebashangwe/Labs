@@ -7,8 +7,6 @@ It will also contain a loop with the following options:
 •	Quit: Quits the program.
 
 '''
-#from termcolor import colored
-import sys
 
 email_list = []
 #functions
@@ -72,6 +70,6 @@ def list_entries():
 
 def exit_program():
     print("Shutting down...")
-    sys.exit()
+    quit()
 
 main_menu()

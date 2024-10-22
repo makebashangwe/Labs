@@ -24,12 +24,16 @@ def main_menu():
             exit_program()
 
 def add_friend():
-
-    name = input("Enter your friend's name: ")
-
+    
     while True:
+        while True:
+            name = input("Enter your friend's name: ")
+            if name == "" or name == " ":
+                print("Please enter a name.")
+            else:
+                break
         try:
-            age = int(input("Enter your friends age:"))
+            age = int(input("Enter your friend's age:"))
             if age < 0:
                 print("Please enter a positive integer for age.")
             else:
